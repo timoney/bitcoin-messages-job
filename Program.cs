@@ -1,8 +1,8 @@
 using jobs.Messages;
 using jobs.Database;
 
-Database.createNewDatabaseIfNotExists();
+DatabaseUtils.initializeDatabase();
 
-await MessageFinder.findLatestBlockMessages();
+//await MessageFinder.findLatestBlockMessages();
 
-Database.select();
+DatabaseUtils.selectMostRecentTenMessages();

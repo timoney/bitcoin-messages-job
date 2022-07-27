@@ -29,7 +29,6 @@ public class BlockchainClient {
     try {
       string result = await httpClient.GetStringAsync($"https://blockstream.info/api/block/{blockHash}/txids");
       List<string> txIds = JsonConvert.DeserializeObject<List<string>>(result);
-      Console.WriteLine($"blockHash {blockHash} has {txIds.Count} transactions");
       foreach(string txId in txIds) {
         txs.Add(await getTransaction(txId));
       }

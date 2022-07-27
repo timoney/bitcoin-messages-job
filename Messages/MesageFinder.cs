@@ -25,6 +25,7 @@ public class MessageFinder {
         foreach(string token in tokens) {
           if (!token.StartsWith("OP_")) {
             var message = Encoding.GetEncoding("ISO-8859-1").GetString(Convert.FromHexString(token));
+            //Console.WriteLine($"checking message: {message}");
             List<String> englishWords = spelling.findEnglishWords(message);
             if (englishWords.Count > 0) {
               messages.Add(new BlockchainMessage(blockHeight, tx.txid, message, englishWords));
@@ -39,16 +40,17 @@ public class MessageFinder {
   public static async Task<bool> searchBlocks(List<Block> blocks) {
     foreach(Block block in blocks) {
       List<Tx> blockTransactions = await BlockchainClient.getBlockTransactions(block.id);
+      Console.WriteLine($"blockHeight: {block.height}; blockTransactionsCount: {blockTransactions.Count}");
+
       List<BlockchainMessage> blockMessages = new List<BlockchainMessage>();
       foreach(Tx tx in blockTransactions) {
         List<BlockchainMessage> transactionMessages = findTransactionMessages(block.height, tx);
         blockMessages.AddRange(transactionMessages);
       }
 
-      Database.insert($"insert into block (id, height, timestamp) values ('{block.id}', {block.height}, {block.timestamp})");
-      Console.WriteLine($"blockchain messages found in block {block.height}: {blockMessages.Count()}");
       foreach(BlockchainMessage blockchainMessage in blockMessages) {
-        Console.WriteLine($"blockchainMessag: {JsonConvert.SerializeObject(blockchainMessage)}");
+        Console.WriteLine($"blockchainMessage: {JsonConvert.SerializeObject(blockchainMessage)}");
+        DatabaseUtils.insertBlockMessage(blockchainMessage);
       }
     }
     return true;
@@ -62,7 +64,10 @@ public class MessageFinder {
   }
 
   public static async Task<bool> findLatestBlockMessages() {
-    await searchBlocks(await BlockchainClient.getTenBlocks());
+    List<Block> lastTenBlocks = await BlockchainClient.getTenBlocks();
+    int lastSearchedBlock = await DatabaseUtils.selectMaxBlockHeight();
+    Console.WriteLine($"lastSearchedBlock: {lastSearchedBlock}");
+    await searchBlocks(lastTenBlocks.Where(b => b.height > lastSearchedBlock).ToList());
     return true;
   }
 
