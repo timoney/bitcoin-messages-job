@@ -3,6 +3,6 @@ using jobs.Database;
 
 DatabaseUtils.initializeDatabase();
 
-//await MessageFinder.findLatestBlockMessages();
+await MessageFinder.findLatestBlockMessages();
 
 DatabaseUtils.selectMostRecentTenMessages();

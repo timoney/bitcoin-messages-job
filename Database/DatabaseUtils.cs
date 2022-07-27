@@ -23,7 +23,7 @@ public static class DatabaseUtils {
       })
       .Execute(() => connection.Open());
 
-  public static string getMySqlConnectionString() {
+  public static MySqlConnectionStringBuilder newMysqlTCPConnectionString() {
     var connectionString = new MySqlConnectionStringBuilder() {
         SslMode = MySqlSslMode.None,
         Server = Environment.GetEnvironmentVariable("DB_HOST"),   // e.g. '127.0.0.1'
@@ -31,13 +31,39 @@ public static class DatabaseUtils {
         Password = Environment.GetEnvironmentVariable("DB_PASS"), // e.g. 'my-db-password'
         Database = Environment.GetEnvironmentVariable("DB_NAME"), // e.g. 'my-database'
     };
-    connectionString.Pooling = true;
-    connectionString.MaximumPoolSize = 5;
-    connectionString.MinimumPoolSize = 0;
-    connectionString.ConnectionTimeout = 5;
-    connectionString.ConnectionLifeTime = 1800;
-    Console.WriteLine($"connectionString: {connectionString.ConnectionString}");
-    return connectionString.ConnectionString;
+    return connectionString;
+  }
+
+  public static MySqlConnectionStringBuilder newMysqlUnixSocketConnectionString() {
+    var connectionString = new MySqlConnectionStringBuilder() {
+        SslMode = MySqlSslMode.None,
+        Server = Environment.GetEnvironmentVariable("INSTANCE_UNIX_SOCKET"), // e.g. '/cloudsql/project:region:instance'
+        UserID = Environment.GetEnvironmentVariable("DB_USER"),   // e.g. 'my-db-user
+        Password = Environment.GetEnvironmentVariable("DB_PASS"), // e.g. 'my-db-password'
+        Database = Environment.GetEnvironmentVariable("DB_NAME"), // e.g. 'my-database'
+        ConnectionProtocol = MySqlConnectionProtocol.UnixSocket
+    };
+    return connectionString;
+  }
+
+  public static string getMySqlConnectionString()
+  {
+      MySqlConnectionStringBuilder connectionString; 
+      if (Environment.GetEnvironmentVariable("DB_HOST") != null)
+      {
+          connectionString = newMysqlTCPConnectionString();
+      }
+      else
+      {
+          connectionString = newMysqlUnixSocketConnectionString();
+      }
+      connectionString.Pooling = true;
+      connectionString.MaximumPoolSize = 5;
+      connectionString.MinimumPoolSize = 0;
+      connectionString.ConnectionTimeout = 5;
+      connectionString.ConnectionLifeTime = 1800;
+      Console.WriteLine($"connectionString: {connectionString.ConnectionString}");
+      return connectionString.ConnectionString;
   }
 
   public static void initializeDatabase() {
