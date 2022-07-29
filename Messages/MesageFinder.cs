@@ -39,6 +39,7 @@ public class MessageFinder {
 
   public static async Task<bool> searchBlocks(List<Block> blocks) {
     foreach(Block block in blocks) {
+
       List<Tx> blockTransactions = await BlockchainClient.getBlockTransactions(block.id);
       Console.WriteLine($"blockHeight: {block.height}; blockTransactionsCount: {blockTransactions.Count}");
 
@@ -50,8 +51,9 @@ public class MessageFinder {
 
       foreach(BlockchainMessage blockchainMessage in blockMessages) {
         Console.WriteLine($"blockchainMessage: {JsonConvert.SerializeObject(blockchainMessage)}");
-        DatabaseUtils.insertBlockMessage(blockchainMessage);
+        await DatabaseUtils.insertBlockMessage(blockchainMessage);
       }
+      await DatabaseUtils.insertBlock(block);
     }
     return true;
   }
@@ -67,7 +69,9 @@ public class MessageFinder {
     List<Block> lastTenBlocks = await BlockchainClient.getTenBlocks();
     int lastSearchedBlock = await DatabaseUtils.selectMaxBlockHeight();
     Console.WriteLine($"lastSearchedBlock: {lastSearchedBlock}");
-    await searchBlocks(lastTenBlocks.Where(b => b.height > lastSearchedBlock).ToList());
+    List<Block> filteredBlocks = lastTenBlocks.Where(b => b.height > lastSearchedBlock).ToList();
+    Console.WriteLine($"filteredBlocks size: {filteredBlocks.Count}");
+    await searchBlocks(filteredBlocks);
     return true;
   }
 

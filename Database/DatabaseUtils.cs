@@ -62,14 +62,13 @@ public static class DatabaseUtils {
       connectionString.MinimumPoolSize = 0;
       connectionString.ConnectionTimeout = 5;
       connectionString.ConnectionLifeTime = 1800;
-      Console.WriteLine($"connectionString: {connectionString.ConnectionString}");
+      //Console.WriteLine($"connectionString: {connectionString.ConnectionString}");
       return connectionString.ConnectionString;
   }
 
   public static void initializeDatabase() {
     Console.WriteLine("InitializeDatabase");
-    using(DbConnection connection = new MySqlConnection(connectionString))
-    {
+    using(DbConnection connection = new MySqlConnection(connectionString)) {
       connection.OpenWithRetry();
       using (var createTableCommand = connection.CreateCommand())
       {
@@ -80,6 +79,16 @@ public static class DatabaseUtils {
               transactionId TEXT, 
               message TEXT,
               INDEX(blockHeight)
+            )";
+        createTableCommand.ExecuteNonQuery();
+      }
+      using (var createTableCommand = connection.CreateCommand()) {
+        createTableCommand.CommandText = @"
+            create table if not exists 
+            block (
+              id TEXT, 
+              height INT, 
+              INDEX(height)
             )";
         createTableCommand.ExecuteNonQuery();
       }
@@ -102,6 +111,25 @@ public static class DatabaseUtils {
     }
     catch (Exception ex) {
       Console.WriteLine($"error in insertBlockMessage: {ex}");
+      return false;
+    }
+  }
+
+  public static async Task<bool> insertBlock(Block b) {
+    Console.WriteLine("insertBlock");
+    try {
+      using(var connection = new MySqlConnection(connectionString)) { 
+        connection.OpenWithRetry();
+        using (var command = connection.CreateCommand()) {
+          command.CommandText =$"insert into block (id, height) values ('{b.id}', {b.height})";
+          await command.ExecuteNonQueryAsync();
+        }
+      }
+      Console.WriteLine("insertBlock complete");
+      return true;
+    }
+    catch (Exception ex) {
+      Console.WriteLine($"error in insertBlock: {ex}");
       return false;
     }
   }
@@ -135,7 +163,7 @@ public static class DatabaseUtils {
       using(var connection = new MySqlConnection(connectionString)) { 
         connection.OpenWithRetry();
         using (var command = connection.CreateCommand()) {
-          command.CommandText = "select MAX(blockHeight) from blockMessage";
+          command.CommandText = "select MAX(height) from block";
           using (var reader = await command.ExecuteReaderAsync()) {
             while (await reader.ReadAsync()) {
               return reader.GetInt32(0);
@@ -148,6 +176,49 @@ public static class DatabaseUtils {
     catch (Exception ex) {
       Console.WriteLine($"error in selectMaxBlockHeight: {ex}");
       return -1;
+    }
+  }
+
+  public static async Task<List<Block>> selectMostRecentBlocks() {
+    Console.WriteLine("selectMostRecentTenMessages");
+    List<Block> blocks = new List<Block>();
+    try {
+      using(var connection = new MySqlConnection(connectionString)) { 
+        connection.OpenWithRetry();
+        using (var command = connection.CreateCommand()) {
+          command.CommandText = "select height, id from block GROUP BY 1, 2 ORDER BY 1 DESC LIMIT 10";
+          using (var reader = await command.ExecuteReaderAsync()) {
+            while (await reader.ReadAsync()) {
+              blocks.Add(new Block(reader.GetString(1), reader.GetInt32(0), 1L));
+            }
+          }
+        }
+      }
+      Console.WriteLine($"blocks: {JsonConvert.SerializeObject(blocks)}");
+      return blocks;
+    } catch (Exception ex) {
+      Console.WriteLine($"error in selectMostRecentBlocks: {ex}");
+      return new List<Block>();
+    }
+  }
+
+  public static async Task<bool> deleteBlocks() {
+    Console.WriteLine("deleteBlocks");
+    try {
+      using(var connection = new MySqlConnection(connectionString)) { 
+        connection.OpenWithRetry();
+        using (var command = connection.CreateCommand()) {
+          command.CommandText =$"delete from block";
+          await command.ExecuteNonQueryAsync();
+        }
+      }
+      await insertBlock(new Block("id", 1, 1L));
+      Console.WriteLine("deleteBlocks complete");
+      return true;
+    }
+    catch (Exception ex) {
+      Console.WriteLine($"error in deleteBlocks: {ex}");
+      return false;
     }
   }
 }
