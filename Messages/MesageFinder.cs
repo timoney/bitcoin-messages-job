@@ -40,11 +40,14 @@ public class MessageFinder {
   public static async Task<bool> searchBlocks(List<Block> blocks) {
     foreach(Block block in blocks) {
 
-      List<Tx> blockTransactions = await BlockchainClient.getBlockTransactions(block.id);
-      Console.WriteLine($"blockHeight: {block.height}; blockTransactionsCount: {blockTransactions.Count}");
+      await DatabaseUtils.insertBlock(block);
+
+      List<string> blockTxIds = await BlockchainClient.getBlockTransactions(block.id);
+      Console.WriteLine($"blockHeight: {block.height}; blockTransactionsCount: {blockTxIds.Count}");
 
       List<BlockchainMessage> blockMessages = new List<BlockchainMessage>();
-      foreach(Tx tx in blockTransactions) {
+      foreach(string txId in blockTxIds) {
+        Tx tx = await BlockchainClient.getTransaction(txId);
         List<BlockchainMessage> transactionMessages = findTransactionMessages(block.height, tx);
         blockMessages.AddRange(transactionMessages);
       }
@@ -53,7 +56,7 @@ public class MessageFinder {
         Console.WriteLine($"blockchainMessage: {JsonConvert.SerializeObject(blockchainMessage)}");
         await DatabaseUtils.insertBlockMessage(blockchainMessage);
       }
-      await DatabaseUtils.insertBlock(block);
+      
     }
     return true;
   }

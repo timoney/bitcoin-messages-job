@@ -24,19 +24,14 @@ public class BlockchainClient {
     return JsonConvert.DeserializeObject<Tx>(result);
   }
 
-  async public static Task<List<Tx>> getBlockTransactions(string blockHash) {
-    List<Tx> txs = new List<Tx>();
+  async public static Task<List<string>> getBlockTransactions(string blockHash) {
     try {
       string result = await httpClient.GetStringAsync($"https://blockstream.info/api/block/{blockHash}/txids");
       List<string> txIds = JsonConvert.DeserializeObject<List<string>>(result);
-      Console.WriteLine($"getting {txIds.Count} transactions");
-      foreach(string txId in txIds) {
-        txs.Add(await getTransaction(txId));
-      }
     } catch (Exception e) {
       Console.WriteLine($"caught exception {e}");
       Thread.Sleep(120000);
     }
-    return txs;
+    return new List<string>();
   }
 }
