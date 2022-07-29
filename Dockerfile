@@ -14,5 +14,5 @@ WORKDIR /app
 COPY --from=build-env /app/out .
 COPY --from=build-env /app/*.aff .
 COPY --from=build-env /app/*.dic .
-COPY --from=build-env /app.*.txt .
+COPY --from=build-env /app/*.txt .
 ENTRYPOINT ["dotnet", "jobs.dll"]
