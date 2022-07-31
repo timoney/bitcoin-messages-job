@@ -97,7 +97,6 @@ public static class DatabaseUtils {
   }
 
   public static async Task<bool> insertBlockMessage(BlockchainMessage b) {
-    Console.WriteLine("insertBlockMessage");
     try {
       using(var connection = new MySqlConnection(connectionString)) { 
         connection.OpenWithRetry();
@@ -116,7 +115,6 @@ public static class DatabaseUtils {
   }
 
   public static async Task<bool> insertBlock(Block b) {
-    Console.WriteLine("insertBlock");
     try {
       using(var connection = new MySqlConnection(connectionString)) { 
         connection.OpenWithRetry();
