@@ -4,7 +4,7 @@ using WeCantSpell.Hunspell;
 
 public class Spelling {
 
-  var dictionary = WordList.CreateFromFiles(@"English (American).dic");
+  WordList dictionary = WordList.CreateFromFiles(@"English (American).dic");
 
   public List<string> findEnglishWords(string possibleMessage) {
     try {
