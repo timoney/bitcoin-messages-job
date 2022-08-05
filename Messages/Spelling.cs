@@ -3,10 +3,11 @@ namespace jobs.Messages;
 using WeCantSpell.Hunspell;
 
 public class Spelling {
+
+  var dictionary = WordList.CreateFromFiles(@"English (American).dic");
+
   public List<string> findEnglishWords(string possibleMessage) {
     try {
-      var dictionary = WordList.CreateFromFiles(@"English (American).dic");
-
       List<string> englishWords = new List<string>();
       string[] tokens = possibleMessage.Split(' ');
       foreach (string token in tokens) {

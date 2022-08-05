@@ -1,8 +1,6 @@
 using jobs.Messages;
 using jobs.Database;
+using jobs.Clients;
 
-DatabaseUtils.initializeDatabase();
-
-await MessageFinder.findLatestBlockMessages();
-
-DatabaseUtils.selectMostRecentTenMessages();
+var messageFinder = new MessageFinder();
+await messageFinder.findLatestBlockMessages();

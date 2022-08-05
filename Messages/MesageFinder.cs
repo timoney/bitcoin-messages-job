@@ -9,8 +9,10 @@ using jobs.Database;
 
 public class MessageFinder {
   static Spelling spelling = new Spelling();
+  TweetClient tweetClient = new TweetClient();
+  DynamoClient dynamoClient = new DynamoClient();
 
-  public static List<BlockchainMessage> findTransactionMessages(int blockHeight, Tx tx) {
+  public List<BlockchainMessage> findTransactionMessages(Tx tx) {
     List<BlockchainMessage> messages = new List<BlockchainMessage>();
     foreach(Vout vout in tx.vout) {
       string[] tokens = vout.scriptpubkey_asm.Split(' ');
@@ -28,7 +30,7 @@ public class MessageFinder {
             //Console.WriteLine($"checking message: {message}");
             List<String> englishWords = spelling.findEnglishWords(message);
             if (englishWords.Count > 0) {
-              messages.Add(new BlockchainMessage(blockHeight, tx.txid, message, englishWords));
+              messages.Add(new BlockchainMessage(tx.txid, message, englishWords));
             }
           }
         }
@@ -37,53 +39,41 @@ public class MessageFinder {
     return messages;
   }
 
-  public static async Task<bool> searchBlocks(List<Block> blocks) {
+  public async Task<bool> searchBlocks(List<Block> blocks) {
     foreach(Block block in blocks) {
 
-      await DatabaseUtils.insertBlock(block);
+      if (await dynamoClient.isBlockInDb(block.height)) {
+        Console.WriteLine($"block already exists: {block.height}");
+        continue;
+      }
 
+      if (!await dynamoClient.insertBlockInDb(block)) {
+        continue;
+      }
+      
       List<string> blockTxIds = await BlockchainClient.getBlockTransactions(block.id);
       Console.WriteLine($"blockHeight: {block.height}; blockTransactionsCount: {blockTxIds.Count}");
 
       List<BlockchainMessage> blockMessages = new List<BlockchainMessage>();
       foreach(string txId in blockTxIds) {
         Tx tx = await BlockchainClient.getTransaction(txId);
-        List<BlockchainMessage> transactionMessages = findTransactionMessages(block.height, tx);
+        List<BlockchainMessage> transactionMessages = findTransactionMessages(tx);
         blockMessages.AddRange(transactionMessages);
       }
 
       foreach(BlockchainMessage blockchainMessage in blockMessages) {
         Console.WriteLine($"blockchainMessage: {JsonConvert.SerializeObject(blockchainMessage)}");
-        await DatabaseUtils.insertBlockMessage(blockchainMessage);
+        string tweet = $"Block height: {block.height}\n{blockchainMessage.message}";
+        tweetClient.publishTweet(tweet);
       }
       
     }
     return true;
   }
-
-  public static async Task<bool> findKnownBlockMessages() {
-    List<Block> knownBlocks = new List<Block>();
-    knownBlocks.Add(new Block("00000000000000000004cfed06021279e3a2feabc9d6b26ec35f0a2134eba524", 723213, 0));
-    await searchBlocks(knownBlocks);
-    return true;
-  }
-
-  public static async Task<bool> findLatestBlockMessages() {
+  
+  public async Task<bool> findLatestBlockMessages() {
     List<Block> lastTenBlocks = await BlockchainClient.getTenBlocks();
-    int lastSearchedBlock = await DatabaseUtils.selectMaxBlockHeight();
-    Console.WriteLine($"lastSearchedBlock: {lastSearchedBlock}");
-    List<Block> filteredBlocks = lastTenBlocks.Where(b => b.height > lastSearchedBlock).ToList();
-    Console.WriteLine($"filteredBlocks size: {filteredBlocks.Count}");
-    await searchBlocks(filteredBlocks);
-    return true;
-  }
-
-  public static async Task<bool> findBlockMessagesInRange(int startHeight, int endHeight) {
-    while (startHeight <= endHeight) {
-      Console.WriteLine($"Searching blocks: {startHeight} - {endHeight}");
-      await searchBlocks(await BlockchainClient.getTenBlocks(startHeight));
-      startHeight = startHeight + 10;
-    }
+    await searchBlocks(lastTenBlocks);
     return true;
   }
 

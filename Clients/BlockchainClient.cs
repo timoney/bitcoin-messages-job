@@ -27,7 +27,6 @@ public class BlockchainClient {
   async public static Task<List<string>> getBlockTransactions(string blockHash) {
     try {
       string result = await httpClient.GetStringAsync($"https://blockstream.info/api/block/{blockHash}/txids");
-      Console.WriteLine($"result getblocktransactions: {result}");
       List<string> txIds = JsonConvert.DeserializeObject<List<string>>(result);
       return txIds;
     } catch (Exception e) {
