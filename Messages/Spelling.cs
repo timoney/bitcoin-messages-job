@@ -2,22 +2,39 @@ namespace jobs.Messages;
 
 using WeCantSpell.Hunspell;
 
+public enum DicLanguage {
+  English,
+  Spanish
+}
+
 public class Spelling {
 
-  WordList dictionary = WordList.CreateFromFiles(@"English (American).dic");
+  WordList englishDic = WordList.CreateFromFiles(@"English (American).dic");
+  WordList spanishDic = null;
 
-  public List<string> findEnglishWords(string possibleMessage) {
+  private WordList getDictionary(DicLanguage language) {
+    if (language == DicLanguage.English) {
+      return englishDic;
+    } else if (language == DicLanguage.Spanish) {
+      return spanishDic;
+    } else {
+      return englishDic;
+    }
+  }
+
+  public List<string> findWords(string possibleMessage, DicLanguage language) {
     try {
-      List<string> englishWords = new List<string>();
+      List<string> words = new List<string>();
       string[] tokens = possibleMessage.Split(' ');
+      WordList dic = getDictionary(language);
       foreach (string token in tokens) {
-        if (token.Length > 1 && dictionary.Check(token)) {
-          englishWords.Add(token);
+        if (token.Length > 1 && dic.Check(token)) {
+          words.Add(token);
         }
       }
-      return englishWords;
+      return words;
     } catch (Exception ex) {
-      Console.WriteLine($"error in findEnglishWords for message {possibleMessage}: {ex}");
+      Console.WriteLine($"error in findWords for message {possibleMessage}: {ex}");
       return new List<string>();
     }
   }

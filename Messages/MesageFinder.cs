@@ -43,10 +43,6 @@ public class MessageFinder {
         Console.WriteLine($"block already exists: {block.height}");
         continue;
       }
-
-      if (!await dynamoClient.insertBlockInDb(block)) {
-        continue;
-      }
       
       List<string> blockTxIds = await BlockchainClient.getBlockTransactions(block.id);
       Console.WriteLine($"blockHeight: {block.height}; blockTransactionsCount: {blockTxIds.Count}");
@@ -56,6 +52,11 @@ public class MessageFinder {
         Tx tx = await BlockchainClient.getTransaction(txId);
         List<BlockchainMessage> transactionMessages = findTransactionMessages(tx);
         blockMessages.AddRange(transactionMessages);
+      }
+
+      // mark the block as searched. if it fails move on to next and don't tweet
+      if (!await dynamoClient.insertBlockInDb(block)) {
+        continue;
       }
 
       foreach(BlockchainMessage blockchainMessage in blockMessages) {

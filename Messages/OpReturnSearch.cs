@@ -9,7 +9,7 @@ public class OpReturnSearch {
 
   public string findMessage(string hexMessage) {
     var message = Encoding.GetEncoding("ISO-8859-1").GetString(Convert.FromHexString(hexMessage));
-    List<String> englishWords = spelling.findEnglishWords(message);
+    List<String> englishWords = spelling.findWords(message, DicLanguage.English);
     if (englishWords.Count > 0) {
       return message;
     }
