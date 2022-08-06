@@ -1,6 +1,5 @@
 namespace jobs.Messages;
 
-using System.Text;
 using jobs.Models;
 using jobs.Clients;
 using jobs.Messages;
@@ -8,9 +7,9 @@ using Newtonsoft.Json;
 using jobs.Database;
 
 public class MessageFinder {
-  static Spelling spelling = new Spelling();
   TweetClient tweetClient = new TweetClient();
   DynamoClient dynamoClient = new DynamoClient();
+  OpReturnSearch opReturnSearch = new OpReturnSearch();
 
   public List<BlockchainMessage> findTransactionMessages(Tx tx) {
     List<BlockchainMessage> messages = new List<BlockchainMessage>();
@@ -26,11 +25,9 @@ public class MessageFinder {
       if (hasOpReturn) {
         foreach(string token in tokens) {
           if (!token.StartsWith("OP_")) {
-            var message = Encoding.GetEncoding("ISO-8859-1").GetString(Convert.FromHexString(token));
-            //Console.WriteLine($"checking message: {message}");
-            List<String> englishWords = spelling.findEnglishWords(message);
-            if (englishWords.Count > 0) {
-              messages.Add(new BlockchainMessage(tx.txid, message, englishWords));
+            string message = opReturnSearch.findMessage(token);
+            if (message != null) {
+              messages.Add(new BlockchainMessage(tx.txid, message, null));
             }
           }
         }
@@ -63,8 +60,8 @@ public class MessageFinder {
 
       foreach(BlockchainMessage blockchainMessage in blockMessages) {
         Console.WriteLine($"blockchainMessage: {JsonConvert.SerializeObject(blockchainMessage)}");
-        string tweet = $"Block: {block.height}\nTx: {blockchainMessage.transactionId}\n{blockchainMessage.message}";
-        tweetClient.publishTweet(tweet);
+        string tweet = $"Block: {block.height} Tx:\n{blockchainMessage.transactionId}\n\n{blockchainMessage.message}";
+        await tweetClient.publishTweet(tweet);
       }
       
     }

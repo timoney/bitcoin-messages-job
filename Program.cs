@@ -1,6 +1,8 @@
 using jobs.Messages;
-using jobs.Database;
-using jobs.Clients;
 
 var messageFinder = new MessageFinder();
 await messageFinder.findLatestBlockMessages();
+
+// for testing
+//var testMessageFinder = new TestMessageFinder();
+//await testMessageFinder.findKnownMessage();
