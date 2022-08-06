@@ -63,14 +63,14 @@ public class MessageFinder {
 
       foreach(BlockchainMessage blockchainMessage in blockMessages) {
         Console.WriteLine($"blockchainMessage: {JsonConvert.SerializeObject(blockchainMessage)}");
-        string tweet = $"Block height: {block.height}\n{blockchainMessage.message}";
+        string tweet = $"Block: {block.height}\nTx: {blockchainMessage.transactionId}\n{blockchainMessage.message}";
         tweetClient.publishTweet(tweet);
       }
       
     }
     return true;
   }
-  
+
   public async Task<bool> findLatestBlockMessages() {
     List<Block> lastTenBlocks = await BlockchainClient.getTenBlocks();
     await searchBlocks(lastTenBlocks);
