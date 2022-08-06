@@ -5,4 +5,4 @@ await messageFinder.findLatestBlockMessages();
 
 // for testing
 //var testMessageFinder = new TestMessageFinder();
-//await testMessageFinder.findKnownMessage();
+//await testMessageFinder.findFrenchMessage();
