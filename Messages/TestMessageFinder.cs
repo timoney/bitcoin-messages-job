@@ -13,7 +13,7 @@ public class TestMessageFinder {
     List<BlockchainMessage> blockMessages = messageFinder.findTransactionMessages(tx);
 
     foreach(BlockchainMessage blockchainMessage in blockMessages) {
-      string tweet = $"Block: unknownForTest Tx:\n{blockchainMessage.transactionId}\n\n{blockchainMessage.message}";
+      string tweet = $"Block: unknownForTest\nTx:{blockchainMessage.transactionId}\n\n{blockchainMessage.message}";
       Console.WriteLine($"tweet:\n${tweet}");
     }
 

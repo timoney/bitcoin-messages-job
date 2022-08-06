@@ -61,7 +61,7 @@ public class MessageFinder {
 
       foreach(BlockchainMessage blockchainMessage in blockMessages) {
         Console.WriteLine($"blockchainMessage: {JsonConvert.SerializeObject(blockchainMessage)}");
-        string tweet = $"Block: {block.height} Tx:\n{blockchainMessage.transactionId}\n\n{blockchainMessage.message}";
+        string tweet = $"Block: {block.height}\nTx: {blockchainMessage.transactionId}\n\n{blockchainMessage.message}";
         await tweetClient.publishTweet(tweet);
       }
       

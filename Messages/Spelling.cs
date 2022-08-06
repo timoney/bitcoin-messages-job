@@ -9,7 +9,7 @@ public enum DicLanguage {
 
 public class Spelling {
 
-  WordList englishDic = WordList.CreateFromFiles(@"English (American).dic");
+  WordList englishDic = WordList.CreateFromFiles(@"Dictionaries/English (American).dic");
   WordList spanishDic = null;
 
   private WordList getDictionary(DicLanguage language) {
