@@ -9,7 +9,7 @@ public class OpReturnSearch {
   Spelling spelling = new Spelling();
 
   List<String> dumbWords = new List<String>() {
-    "zT", "Fl", "BERNSTEIN", "consolidate"
+    "zT", "Fl", "BERNSTEIN", "consolidate", "Hath"
   };
 
   // a hack for now. hopefully filter out messages that don't actually make any sense
